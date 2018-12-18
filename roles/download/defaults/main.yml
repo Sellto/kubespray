@@ -38,17 +38,12 @@ image_arch: "{{ host_architecture }}"
 kube_version: v1.12.2
 kubeadm_version: "{{ kube_version }}"
 etcd_version: 3.2.24
-
+coredns_version: 1.2.2
+dnsautoscaler_version: 1.3.0
+pod_infra_version: 3.1
+weave_version: 2.5.0
 # kubernetes image repo define
 kube_image_repo: "gcr.io/google-containers"
-
-# TODO(mattymo): Move calico versions to roles/network_plugins/calico/defaults
-# after migration to container download
-
-
-
-weave_version: 2.5.0
-pod_infra_version: 3.1
 
 
 # Download URLs
@@ -75,13 +70,6 @@ kubeadm_all_checksums : "{{ kubeadm_checksums[kube_version] }}"
 kubeadm_binary_checksum: "{{ kubeadm_all_checksums[image_arch] }}"
 
 # Containers
-# In some cases, we need a way to set --registry-mirror or --insecure-registry for docker,
-# it helps a lot for local prbinaryivate development or bare metal environment.
-# So you need define --registry-mirror or --insecure-registry, and modify the following url address.
-# example:
-# You need to deploy kubernetes cluster on local private development.
-# Also provide the address of your own private registry.
-# And use --insecure-registry options for docker
 etcd_image_repo: "k8s.gcr.io/etcd"
 etcd_image_tag: "{{ etcd_version }}"
 
@@ -91,102 +79,23 @@ hyperkube_image_tag: "{{ kube_version }}"
 pod_infra_image_repo: "k8s.gcr.io/pause"
 pod_infra_image_tag: "{{ pod_infra_version }}"
 
-netcheck_version: "v1.0"
-netcheck_agent_image_repo: "quay.io/l23network/k8s-netchecker-agent"
-netcheck_agent_image_tag: "{{ netcheck_version }}"
-
-netcheck_server_image_repo: "quay.io/l23network/k8s-netchecker-server"
-netcheck_server_image_tag: "{{ netcheck_version }}"
-
 weave_kube_image_repo: "docker.io/weaveworks/weave-kube"
 weave_kube_image_tag: "{{ weave_version }}"
 
 weave_npc_image_repo: "docker.io/weaveworks/weave-npc"
 weave_npc_image_tag: "{{ weave_version }}"
 
-nginx_image_repo: nginx
-nginx_image_tag: 1.13
-
-kubedns_version: 1.14.13
-kubedns_image_repo: "k8s.gcr.io/k8s-dns-kube-dns"
-kubedns_image_tag: "{{ kubedns_version }}"
-
-coredns_version: 1.2.2
 coredns_image_repo: "k8s.gcr.io/coredns"
 coredns_image_tag: "{{ coredns_version }}"
 
-dnsmasq_nanny_image_repo: "k8s.gcr.io/k8s-dns-dnsmasq-nanny"
-dnsmasq_nanny_image_tag: "{{ kubedns_version }}"
-
-dnsmasq_sidecar_image_repo: "K8s.gcr.io/k8s-dns-sidecar"
-dnsmasq_sidecar_image_tag: "{{ kubedns_version }}"
-
-dnsmasqautoscaler_version: 1.1.2
-dnsmasqautoscaler_image_repo: "gcr.io/google_containers/cluster-proportional-autoscaler-{{ image_arch }}"
-dnsmasqautoscaler_image_tag: "{{ dnsmasqautoscaler_version }}"
-
-dnsautoscaler_version: 1.3.0
 dnsautoscaler_image_repo: "gcr.io/google_containers/cluster-proportional-autoscaler-{{ image_arch }}"
 dnsautoscaler_image_tag: "{{ dnsautoscaler_version }}"
 
 test_image_repo: busybox
 test_image_tag: latest
 
-busybox_image_repo: busybox
-busybox_image_tag: 1.29.2
-
-helm_version: "v2.11.0"
-helm_image_repo: "lachlanevenson/k8s-helm"
-helm_image_tag: "{{ helm_version }}"
-
-tiller_image_repo: "gcr.io/kubernetes-helm/tiller"
-tiller_image_tag: "{{ helm_version }}"
-
-
-
-metrics_server_version: "v0.3.1"
-metrics_server_image_repo: "k8s.gcr.io/metrics-server-{{ image_arch }}"
-metrics_server_image_tag: "{{ metrics_server_version }}"
-
-local_volume_provisioner_image_tag: "v2.1.0"
-local_volume_provisioner_image_repo: "quay.io/external_storage/local-volume-provisioner"
-
-cephfs_provisioner_image_tag: "v2.1.0-k8s1.11"
-cephfs_provisioner_image_repo: "quay.io/external_storage/cephfs-provisioner"
-
-ingress_nginx_controller_image_tag: "0.20.0"
-ingress_nginx_controller_image_repo: "quay.io/kubernetes-ingress-controller/nginx-ingress-controller"
-
-ingress_nginx_default_backend_image_tag: 1.5
-ingress_nginx_default_backend_image_repo: "k8s.gcr.io/defaultbackend-{{ image_arch }}"
-
-cert_manager_version: "v0.5.2"
-cert_manager_controller_image_repo: "quay.io/jetstack/cert-manager-controller"
-cert_manager_controller_image_tag: "{{ cert_manager_version }}"
-
-addon_resizer_version: 2.1
-addon_resizer_image_repo: "k8s.gcr.io/addon-resizer-{{ image_arch }}"
-addon_resizer_image_tag: "{{ addon_resizer_version }}"
 
 downloads:
-  netcheck_server:
-    enabled: "{{ deploy_netchecker }}"
-    container: true
-    repo: "{{ netcheck_server_image_repo }}"
-    tag: "{{ netcheck_server_image_tag }}"
-    sha256: "{{ netcheck_server_digest_checksum|default(None) }}"
-    groups:
-      - k8s-cluster
-
-  netcheck_agent:
-    enabled: "{{ deploy_netchecker }}"
-    container: true
-    repo: "{{ netcheck_agent_image_repo }}"
-    tag: "{{ netcheck_agent_image_tag }}"
-    sha256: "{{ netcheck_agent_digest_checksum|default(None) }}"
-    groups:
-      - k8s-cluster
-
   etcd:
     container: true
     enabled: true
@@ -260,26 +169,6 @@ downloads:
     groups:
       - k8s-cluster
 
-  nginx:
-    enabled: "{{ loadbalancer_apiserver_localhost }}"
-    container: true
-    repo: "{{ nginx_image_repo }}"
-    tag: "{{ nginx_image_tag }}"
-    sha256: "{{ nginx_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-
-  kubedns:
-    enabled: "{{ dns_mode in ['kubedns', 'dnsmasq_kubedns'] }}"
-    container: true
-    repo: "{{ kubedns_image_repo }}"
-    tag: "{{ kubedns_image_tag }}"
-    sha256: "{{ kubedns_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-    dest: "{{local_release_dir}}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
-
   coredns:
     enabled: "{{ dns_mode in ['coredns', 'coredns_dual'] }}"
     container: true
@@ -289,130 +178,12 @@ downloads:
     groups:
       - kube-node
 
-  dnsmasq_nanny:
-    enabled: "{{ dns_mode in ['kubedns', 'dnsmasq_kubedns'] }}"
-    container: true
-    repo: "{{ dnsmasq_nanny_image_repo }}"
-    tag: "{{ dnsmasq_nanny_image_tag }}"
-    sha256: "{{ dnsmasq_nanny_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  dnsmasq_sidecar:
-    enabled: "{{ dns_mode in ['kubedns', 'dnsmasq_kubedns'] }}"
-    container: true
-    repo: "{{ dnsmasq_sidecar_image_repo }}"
-    tag: "{{ dnsmasq_sidecar_image_tag }}"
-    sha256: "{{ dnsmasq_sidecar_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  dnsautoscaler:
-    enabled: "{{ dns_mode in ['kubedns', 'dnsmasq_kubedns','coredns', 'coredns_dual'] }}"
-    container: true
-    repo: "{{ dnsautoscaler_image_repo }}"
-    tag: "{{ dnsautoscaler_image_tag }}"
-    sha256: "{{ dnsautoscaler_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  busybox:
-    enabled: "{{ kube_network_plugin in ['kube-router'] }}"
-    container: true
-    repo: "{{ busybox_image_repo }}"
-    tag: "{{ busybox_image_tag }}"
-    sha256: "{{ busybox_digest_checksum|default(None) }}"
-    groups:
-      - k8s-cluster
-
   testbox:
     enabled: false
     container: true
     repo: "{{ test_image_repo }}"
     tag: "{{ test_image_tag }}"
     sha256: "{{ testbox_digest_checksum|default(None) }}"
-
-  helm:
-    enabled: "{{ helm_enabled }}"
-    container: true
-    repo: "{{ helm_image_repo }}"
-    tag: "{{ helm_image_tag }}"
-    sha256: "{{ helm_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  tiller:
-    enabled: "{{ helm_enabled }}"
-    container: true
-    repo: "{{ tiller_image_repo }}"
-    tag: "{{ tiller_image_tag }}"
-    sha256: "{{ tiller_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  metrics_server:
-    enabled: "{{ metrics_server_enabled }}"
-    container: true
-    repo: "{{ metrics_server_image_repo }}"
-    tag: "{{ metrics_server_image_tag }}"
-    sha256: "{{ metrics_server_digest_checksum|default(None) }}"
-    groups:
-      - kube-master
-
-  addon_resizer:
-    # Currently addon_resizer is only used by metrics server
-    enabled: "{{ metrics_server_enabled }}"
-    container: true
-    repo: "{{ addon_resizer_image_repo }}"
-    tag: "{{ addon_resizer_image_tag }}"
-    sha256: "{{ addon_resizer_digest_checksum|default(None) }}"
-    groups:
-      - kube-master
-
-  local_volume_provisioner:
-    enabled: "{{ local_volume_provisioner_enabled }}"
-    container: true
-    repo: "{{ local_volume_provisioner_image_repo }}"
-    tag: "{{ local_volume_provisioner_image_tag }}"
-    sha256: "{{ local_volume_provisioner_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  cephfs_provisioner:
-    enabled: "{{ cephfs_provisioner_enabled }}"
-    container: true
-    repo: "{{ cephfs_provisioner_image_repo }}"
-    tag: "{{ cephfs_provisioner_image_tag }}"
-    sha256: "{{ cephfs_provisioner_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  ingress_nginx_controller:
-    enabled: "{{ ingress_nginx_enabled }}"
-    container: true
-    repo: "{{ ingress_nginx_controller_image_repo }}"
-    tag: "{{ ingress_nginx_controller_image_tag }}"
-    sha256: "{{ ingress_nginx_controller_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  ingress_nginx_default_backend:
-    enabled: "{{ ingress_nginx_enabled }}"
-    container: true
-    repo: "{{ ingress_nginx_default_backend_image_repo }}"
-    tag: "{{ ingress_nginx_default_backend_image_tag }}"
-    sha256: "{{ ingress_nginx_default_backend_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
-
-  cert_manager_controller:
-    enabled: "{{ cert_manager_enabled }}"
-    container: true
-    repo: "{{ cert_manager_controller_image_repo }}"
-    tag: "{{ cert_manager_controller_image_tag }}"
-    sha256: "{{ cert_manager_controller_digest_checksum|default(None) }}"
-    groups:
-      - kube-node
 
 download_defaults:
   container: false

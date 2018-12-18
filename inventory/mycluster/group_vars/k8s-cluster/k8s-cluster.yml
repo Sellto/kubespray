@@ -112,7 +112,7 @@ ndots: 2
 
 # Can be  dnsmasq_kubedns, kubedns not, coredns, coredns_dual, manual or none
 # Only kubedns was tested.
-dns_mode: kubedns
+dns_mode: coredns
 # Set manual server if using a custom cluster DNS server
 #manual_dns_server: 10.x.x.x
 

@@ -17,11 +17,6 @@
   tags:
     - kubelet
 
-- import_tasks: nginx-proxy.yml
-  when: is_kube_master == false and loadbalancer_apiserver_localhost
-  tags:
-    - nginx
-
 - name: Write kubelet config file (non-kubeadm)
   template:
     src: kubelet.standard.env.j2
@@ -177,33 +172,6 @@
     - cloud-provider
     - facts
 
-- name: Write cacert file
-  copy:
-    src: "{{ openstack_cacert }}"
-    dest: "{{ kube_config_dir }}/openstack-cacert.pem"
-    group: "{{ kube_cert_group }}"
-    mode: 0640
-  when:
-    - inventory_hostname in groups['k8s-cluster']
-    - cloud_provider is defined
-    - cloud_provider == 'openstack'
-    - openstack_cacert is defined
-    - openstack_cacert != ""
-  tags:
-    - cloud-provider
-
-- name: Write cloud-config
-  template:
-    src: "{{ cloud_provider }}-cloud-config.j2"
-    dest: "{{ kube_config_dir }}/cloud_config"
-    group: "{{ kube_cert_group }}"
-    mode: 0640
-  when:
-    - cloud_provider is defined
-    - cloud_provider in [ 'openstack', 'azure', 'vsphere', 'aws' ]
-  notify: restart kubelet
-  tags:
-    - cloud-provider
 
 # reload-systemd
 - meta: flush_handlers
